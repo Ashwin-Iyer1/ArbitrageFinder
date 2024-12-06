@@ -49,13 +49,41 @@ def main():
     else:
         arbitrage_opportunities = list(arbitrage_opportunities)
         print(f"{len(arbitrage_opportunities)} arbitrage opportunities found {':money-mouth_face:' if len(arbitrage_opportunities) > 0 else ':man_shrugging:'}")
-
+        sorted_arbitrage_opportunities = []
         for arb in arbitrage_opportunities:
+            valueList = []
+            betDict = {}
             print(f"\t[italic]{arb['match_name']} in {arb['league']} [/italic]")
             print(f"\t\tTotal implied odds: {arb['total_implied_odds']} with these odds:")
             for key, value in arb['best_outcome_odds'].items():
                 print(f"\t\t[bold red]{key}[/bold red] with [green]{value[0]}[/green] for {value[1]}")
+                valueList.append(float(value[1]))
+            largestValue = max(valueList)
+            for value in valueList:
+                if value in betDict:
+                    betDict[value - .001] = round((largestValue * 100) / value, 4)
+                if value == largestValue:
+                    betDict[value] = 100
+                else:
+                    betDict[value] = round((largestValue * 100) / value, 4)
+            Liability = sum(betDict.values())
+            absoluteProfit = []
+            for key, value in betDict.items():
+                absoluteProfit.append(round((key * value) - Liability, 2))
+            avgProfit = sum(absoluteProfit) / len(absoluteProfit)
+            total_absoluteProfit = sum(absoluteProfit)
+            print(f"\t\t absolute profit: {total_absoluteProfit:.2f}")
+            print(f"\t\t Average profit: [green]${avgProfit:.2f}[/green]")
+            print(f"\t\t amounts to bet: {betDict}")
+            print(f"\t\t Liability: {Liability:.2f}")
+            sorted_arbitrage_opportunities.append((arb, total_absoluteProfit))
+        sorted_arbitrage_opportunities = sorted(sorted_arbitrage_opportunities, key=lambda x: x[1], reverse=True)
 
+    print("\nSorted Arbitrage Opportunities by Absolute Profit:")
+    for arb, profit in sorted_arbitrage_opportunities:
+        print(f"\t[italic]{arb['match_name']} in {arb['league']}[/italic]: Absolute Profit = {profit:.2f}")
+
+            
 
 if __name__ == '__main__':
     main()
