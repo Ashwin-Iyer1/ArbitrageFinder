@@ -50,6 +50,8 @@ def main():
         arbitrage_opportunities = list(arbitrage_opportunities)
         print(f"{len(arbitrage_opportunities)} arbitrage opportunities found {':money-mouth_face:' if len(arbitrage_opportunities) > 0 else ':man_shrugging:'}")
         sorted_arbitrage_opportunities = []
+        sorted_average_profit = []
+        profit_per_dollar = []
         for arb in arbitrage_opportunities:
             valueList = []
             betDict = {}
@@ -77,11 +79,23 @@ def main():
             print(f"\t\t amounts to bet: {betDict}")
             print(f"\t\t Liability: {Liability:.2f}")
             sorted_arbitrage_opportunities.append((arb, total_absoluteProfit))
+            sorted_average_profit.append((arb, avgProfit))
+            profit_per_dollar.append((arb, total_absoluteProfit/Liability))
+        sorted_average_profit = sorted(sorted_average_profit, key=lambda x: x[1], reverse=True)
         sorted_arbitrage_opportunities = sorted(sorted_arbitrage_opportunities, key=lambda x: x[1], reverse=True)
+        profit_per_dollar = sorted(profit_per_dollar, key=lambda x: x[1], reverse=True)
 
     print("\nSorted Arbitrage Opportunities by Absolute Profit:")
     for arb, profit in sorted_arbitrage_opportunities:
         print(f"\t[italic]{arb['match_name']} in {arb['league']}[/italic]: Absolute Profit = {profit:.2f}")
+    print("\n")
+    print("\n Sorted Arbitrage Opportunities by Average Profit:")
+    for arb, profit in sorted_average_profit:
+        print(f"\t[italic]{arb['match_name']} in {arb['league']}[/italic]: Average Profit = {profit:.2f}")
+    print("\n")
+    print("\n Sorted Arbitrage Opportunities by Profit per Dollar:")
+    for arb, profit in profit_per_dollar:
+        print(f"\t[italic]{arb['match_name']} in {arb['league']}[/italic]: Profit per Dollar = {profit:.2f}")
 
             
 
