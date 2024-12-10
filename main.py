@@ -7,6 +7,10 @@ import os
 import argparse
 from dotenv import load_dotenv
 from rich import print
+import json
+
+load_dotenv()
+
 
 
 def main():
@@ -44,10 +48,15 @@ def main():
 
     arbitrage_opportunities = get_arbitrage_opportunities(key=args.key, region=args.region, cutoff=cutoff)
 
+    arbitrage_opportunities = list(arbitrage_opportunities)
+
+    with open("arbitrage_opportunities.json", "w") as f:
+        json.dump(arbitrage_opportunities,f, indent=4)
+
+
     if args.unformatted:
-        print(list(arbitrage_opportunities))
+        print(arbitrage_opportunities)
     else:
-        arbitrage_opportunities = list(arbitrage_opportunities)
         print(f"{len(arbitrage_opportunities)} arbitrage opportunities found {':money-mouth_face:' if len(arbitrage_opportunities) > 0 else ':man_shrugging:'}")
         sorted_arbitrage_opportunities = []
         sorted_average_profit = []

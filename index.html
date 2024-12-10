@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="UI">
+        <h1>Arbitrage</h1>
+        <input type="number" placeholder="Min amt">
+        <button id="submitBtn">Submit</button>
+        <select id="sortDropdown">
+            <option value="totalAbsoluteProfit">Absolute Profit</option>
+            <option value="avgProfit">Average Profit</option>
+            <option value="profitPerDollar">Profit Per Liability Amount</option>
+        </select>
+
+    </div>
+    <div id="app">
+
+
+    </div>
+        <script type="module">
+            import data from './arbitrage_opportunities.json' with { type: "json" };
+            console.log(data);
+            
+            const app = document.getElementById('app');
+            const minAmtInput = document.querySelector('input');
+            const submitBtn = document.getElementById('submitBtn');
+            const sortDropdown = document.getElementById('sortDropdown');
+
+            let arbitrageData = [];
+            const calculateArbitrage = () => {
+            const minAmtValue = minAmtInput.value ? parseFloat(minAmtInput.value) : 100;
+            arbitrageData = data.map((arb) => {
+    const valueList = [];
+    const betDict = {};
+
+    Object.entries(arb.best_outcome_odds).forEach(([team, [_, odds]]) => {
+        valueList.push({ team, odds: parseFloat(odds) });
+    });
+
+    const largestValue = Math.max(...valueList.map((v) => v.odds));
+
+    valueList.forEach(({ team, odds }) => {
+        if (odds === largestValue) {
+            betDict[team] = minAmtValue;
+        } else {
+            betDict[team] = parseFloat(((largestValue * minAmtValue) / odds).toFixed(4));
+        }
+    });
+
+    const liability = Object.values(betDict).reduce((acc, curr) => acc + curr, 0);
+    const absoluteProfit = Object.entries(betDict).map(([team, value]) => 
+        parseFloat((arb.best_outcome_odds[team][1] * value - liability).toFixed(2))
+    );
+    const avgProfit = absoluteProfit.reduce((acc, curr) => acc + curr, 0) / absoluteProfit.length;
+    const totalAbsoluteProfit = absoluteProfit.reduce((acc, curr) => acc + curr, 0);
+
+    return {
+        matchName: arb.match_name,
+        league: arb.league,
+        bestOutcomeOdds: arb.best_outcome_odds,
+        totalImpliedOdds: arb.total_implied_odds,
+        totalAbsoluteProfit,
+        avgProfit,
+        profitPerDollar: totalAbsoluteProfit / liability,
+        betDict, // Now contains team names as keys
+        liability
+    };
+});
+
+
+
+
+            renderData();
+        };
+
+        const renderData = () => {
+            console.log(arbitrageData)
+            app.innerHTML = '';
+            const sortedData = sortData(arbitrageData, sortDropdown.value);
+            sortedData.forEach((arb) => {
+                const div = document.createElement('div');
+                div.className = 'arbitrage-opportunity';
+                const bestOutcomeOdds = Object.entries(arb.bestOutcomeOdds)
+                    .map(([team, [bookmaker, odds]]) => `<strong>${team}</strong> (${bookmaker}: ${odds})`)
+                    .join('<br>');
+
+                div.innerHTML = `
+                    <h2>${arb.matchName}</h2>
+                    <p><strong>Best Outcome Odds:</strong><br>${bestOutcomeOdds}</p>
+                    <p><strong>Total Implied Odds:</strong> ${arb.totalImpliedOdds}</p>
+                    <p><strong>Total Absolute Profit:</strong> ${arb.totalAbsoluteProfit.toFixed(2)}</p>
+                    <p><strong>Average Profit:</strong> $${arb.avgProfit.toFixed(2)}</p>
+                    <p><strong>Profit Per Liability Amount:</strong> ${arb.profitPerDollar.toFixed(2)}</p>
+                    <p><strong>Liability:</strong> ${arb.liability.toFixed(2)}</p>
+                    <p><strong>Amounts to Bet:</strong> ${JSON.stringify(arb.betDict)}</p>
+                `;
+                app.appendChild(div);
+            });
+        };
+
+        const sortData = (data, criteria) => {
+            console.log(`Sorting by: ${criteria}`);
+            return [...data].sort((a, b) => {
+                console.log(`Comparing ${b[criteria]} and ${a[criteria]}`);
+                return b[criteria] - a[criteria]
+            }
+        );
+        };
+
+        submitBtn.addEventListener('click', calculateArbitrage);
+        sortDropdown.addEventListener('change', renderData);
+
+
+        </script>
+</body>
+</html>

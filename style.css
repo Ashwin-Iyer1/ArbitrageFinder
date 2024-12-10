@@ -1,0 +1,19 @@
+.app {
+    display: flex;
+    flex-wrap: wrap; /* Allow items to wrap to the next row */
+    gap: 10px; /* Adds space between items */
+    justify-content: flex-start; /* Align items to the left */
+    width: 100%; /* Ensure the container has a defined width */
+
+}
+
+
+.arbitrage-opportunity {
+    background-color: #adadad;
+    color: #000000;
+    padding: 10px;
+    border-radius: 5px;
+    box-sizing: border-box; /* Include padding and borders in the width calculation */
+}
+
+

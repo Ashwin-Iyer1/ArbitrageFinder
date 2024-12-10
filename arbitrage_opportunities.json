@@ -1,0 +1,104 @@
+[
+    {
+        "match_name": "Denver Broncos v. Indianapolis Colts",
+        "match_start_time": 1734297900,
+        "hours_to_start": 128.27942517167992,
+        "league": "americanfootball_nfl",
+        "best_outcome_odds": {
+            "Denver Broncos": [
+                "DraftKings",
+                1.56
+            ],
+            "Indianapolis Colts": [
+                "FanDuel",
+                2.84
+            ]
+        },
+        "total_implied_odds": 0.993138317081979
+    },
+    {
+        "match_name": "Oleksandr Usyk v. Tyson Fury",
+        "match_start_time": 1734820200,
+        "hours_to_start": 273.36265969475113,
+        "league": "boxing_boxing",
+        "best_outcome_odds": {
+            "Oleksandr Usyk": [
+                "Bovada",
+                1.69
+            ],
+            "Tyson Fury": [
+                "BetOnline.ag",
+                2.45
+            ]
+        },
+        "total_implied_odds": 0.9998792416374833
+    },
+    {
+        "match_name": "Merab Dvalishvili v. Umar Nurmagomedov",
+        "match_start_time": 1737259200,
+        "hours_to_start": 950.8599095929993,
+        "league": "mma_mixed_martial_arts",
+        "best_outcome_odds": {
+            "Merab Dvalishvili": [
+                "BetOnline.ag",
+                3.35
+            ],
+            "Umar Nurmagomedov": [
+                "FanDuel",
+                1.43
+            ]
+        },
+        "total_implied_odds": 0.9978081619872665
+    },
+    {
+        "match_name": "Weili Zhang v. Tatiana Suarez",
+        "match_start_time": 1739073600,
+        "hours_to_start": 1454.8599095883635,
+        "league": "mma_mixed_martial_arts",
+        "best_outcome_odds": {
+            "Tatiana Suarez": [
+                "FanDuel",
+                2.72
+            ],
+            "Weili Zhang": [
+                "BetOnline.ag",
+                1.74
+            ]
+        },
+        "total_implied_odds": 0.9423597025016903
+    },
+    {
+        "match_name": "Dricus Du Plessis v. Sean Strickland",
+        "match_start_time": 1739077200,
+        "hours_to_start": 1455.8599095861116,
+        "league": "mma_mixed_martial_arts",
+        "best_outcome_odds": {
+            "Dricus Du Plessis": [
+                "DraftKings",
+                1.77
+            ],
+            "Sean Strickland": [
+                "BetRivers",
+                2.38
+            ]
+        },
+        "total_implied_odds": 0.9851398186393201
+    },
+    {
+        "match_name": "Missouri Tigers v. Iowa Hawkeyes",
+        "match_start_time": 1735587000,
+        "hours_to_start": 486.3573287919495,
+        "league": "americanfootball_ncaaf",
+        "best_outcome_odds": {
+            "Iowa Hawkeyes": [
+                "BetRivers",
+                2.45
+            ],
+            "Missouri Tigers": [
+                "DraftKings",
+                1.7
+            ]
+        },
+        "total_implied_odds": 0.9963985594237694
+    }
+]
