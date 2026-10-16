@@ -1,35 +1,44 @@
-# Arbitrage Finder
-A simple tool to find sports betting arbitrage opportunities.
+# Arbitrage Finder · Settlement Lab
 
-The tool fetches the odds from [The Odds API](https://the-odds-api.com/) and compares the odds at different bookmakers to each other in order to determine whether there are profitable and risk-free bets available.
+A read-only odds workbench built on [daankoning/ArbitrageFinder](https://github.com/daankoning/ArbitrageFinder). The original fetcher and GPL-2.0 license are retained. This fork adds named-outcome allocation, cost/rounding analysis, a browser interface and regression tests.
 
-## Installation
-Start out by cloning the repository:
+![Settlement Lab](docs/settlement-lab.png)
 
-    git clone https://github.com/daankoning/ArbitrageFinder.git
+## Try it without an API key
 
-Install the dependencies:
+```bash
+python -m http.server 49215
+```
 
-    pip install -r requirements.txt
+Open http://localhost:49215. Choose a clearly labeled synthetic two/three-way scenario or a saved historical match, edit decimal odds, budget and illustrative profit commission, inspect every possible settlement, and export the analysis. All computation stays local. The original `arbitrage_opportunities.json` is unchanged: a December 2024 repository snapshot, **not current odds**. Event dates may extend into 2025; individual quote timestamps are absent.
 
-Next, ensure you have an API key from The Odds API and simply run:
+```bash
+python main.py --budget 100 --commission 2
+python main.py --unformatted --output analysis.json
+python -m pip install -r requirements.txt
+npm test
+```
 
-    python main.py --key <YOUR_API_KEY>
+The default CLI reads the saved snapshot without network access. `--unformatted` now produces valid JSON and exits cleanly. Node 22+ is needed only for Python/JavaScript parity tests; the viewer has no package dependencies.
 
-## Usage
-The tool offers five optional command line arguments.
+## Correct settlement math
 
-### API key
-In order to set the API key to use either the `-k` or `--key` arguments. If neither of these are used the script will read the value of `$API_KEY`. `.env` files are also supported and automatically loaded.
+For effective decimal odds `d[i]`, implied sum `q = sum(1 / d[i])`, and budget `B`, the continuous equal-payout stake is `B / (d[i] * q)`. The theoretical return is `1 / q - 1`. Commission `c` on winning profit gives `d = 1 + (odds - 1) * (1 - c)`.
 
-### Region
-Different parts of the world have different bookmakers. To reflect this the `-r` or `--region` arguments allow you to set the region in which to search. Accepts the values `"eu"`,`"us"`, `"uk"`, and `"au"`. 
+Whole cents are allocated by largest remainders, preserving the budget. Every outcome reports `stake[i] * d[i] - total spent`. The worst of those settlements is the meaningful lower bound under the stated assumptions. The previous implementation summed mutually exclusive outcome profits and used odds as dictionary keys, which collapsed equal-priced outcomes. Neither behavior remains. Largest-remainder rounding is an apportionment rule, not a globally optimal integer solver; tiny budgets can leave an outcome unfunded and are flagged.
 
-### Unformatted
-Using the `-u` or `--unformatted` flags will remove the pretty printing and simply dump the json which contains the arbs to the console directly. Use this if you intend to extend upon the script in some way, for regular usage the formatted print is significantly better.
+## Explicit live reads
 
-### Cutoff
-The `-c` or `--cutoff` allow you to set a minimum profit margin. Should be set as a percentage, so `-c 10` means a 10% profit margin. Defaults to 0 (i.e. any profitable arb will be displayed).
+Set `API_KEY` in the environment or a local ignored `.env`, then explicitly opt in:
 
-### Help
-The `-h` or `--help` flags will show a short help message with documentation.
+```bash
+python main.py --live-read-only --region us --cutoff 1
+```
+
+This consumes [The Odds API](https://the-odds-api.com/liveapi/guides/v4/) quota and never places wagers. API requests have timeouts, request `h2h` markets explicitly, exclude started matches by default, and skip incomplete or invalid bookmaker outcome sets. Soccer requires the draw outcome; a draw reported elsewhere is retained. The cutoff is a theoretical return percentage, not an implied-probability difference. Complete provider outcomes still do not establish identical bookmaker rules; verify void/draw/overtime settlement terms independently before interpreting the math.
+
+## Validation and limits
+
+Seven regression tests cover equal odds, three-way cent allocation, costs removing an edge, invalid/small budgets, Python/browser parity, market selection, missing draws and empty books. The browser checks include commissions turning the synthetic edge negative, historical selection, invalid-input states and responsive layout.
+
+A positive theoretical number is conditional on exhaustive mutually exclusive outcomes, matching settlement rules and all legs accepted at the displayed odds. Bookmaker limits, minimum stakes, taxes, voids and execution delays are excluded. This is an educational analyzer, not a risk-free profit claim or an execution system. Live API behavior was not exercised with credentials in this update.

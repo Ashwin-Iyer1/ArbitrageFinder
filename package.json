@@ -1,0 +1,1 @@
+{"name":"arbitrage-settlement-lab","private":true,"type":"module","scripts":{"start":"python -m http.server 49215","test":"python -m unittest discover -s tests"}}
