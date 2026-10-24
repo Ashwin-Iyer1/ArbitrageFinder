@@ -34,13 +34,23 @@ def main():
                 filtered_data = []
                 for item in data:
                     odds = item.get('best_outcome_odds', {})
-                                        books = {v[0].strip().lower() if isinstance(v, (list, tuple)) and v else v.get('bookmaker', '').strip().lower() for v in odds.values() if (isinstance(v, (list, tuple)) and v) or (isinstance(v, dict) and 'bookmaker' in v)}
+                    books = {
+                        value[0].strip().lower() if isinstance(value, (list, tuple)) and value
+                        else value.get('bookmaker', '').strip().lower()
+                        for value in odds.values()
+                        if (isinstance(value, (list, tuple)) and value)
+                        or (isinstance(value, dict) and 'bookmaker' in value)
+                    }
                     if books and books.issubset(allowed):
                         filtered_data.append(item)
                 data = filtered_data
         results = []
         for item in data:
-            result = allocate(item['best_outcome_odds'], args.budget, args.commission / 100)
+            odds = {
+                outcome: (value['bookmaker'], value['odds']) if isinstance(value, dict) else value
+                for outcome, value in item['best_outcome_odds'].items()
+            }
+            result = allocate(odds, args.budget, args.commission / 100)
             if result['theoreticalReturn'] >= args.cutoff / 100:
                 results.append({**item, 'analysis': result, 'sourceMode': 'live-read-only' if args.live_read_only else 'historical-snapshot'})
         results.sort(key=lambda item: item['analysis']['worstNet'], reverse=True)
