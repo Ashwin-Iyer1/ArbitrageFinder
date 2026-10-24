@@ -1,7 +1,119 @@
 from typing import Iterable, Generator
 import time
 import math
+import requestsfrom typing import Iterable, Generator, Optional
+import time
+import math
 import requests
+from itertools import chain
+
+try:
+    from tqdm import tqdm
+except ImportError:
+    tqdm = lambda *args, **kwargs: args[0]
+
+BASE_URL = "api.the-odds-api." + "com/v4"
+PROTOCOL = "https://"
+
+
+class APIException(RuntimeError):
+    def __str__(self):
+        return str(self.args[0]) + " (HTTP " + str(self.args[1].status_code) + ")"
+
+
+class AuthenticationException(APIException):
+    pass
+
+
+class RateLimitException(APIException):
+    pass
+
+
+def handle_faulty_response(response: requests.Response):
+    if response.status_code == 401:
+        raise AuthenticationException("Failed to authenticate with the API. Is the API key valid?", response)
+    elif response.status_code == 429:
+        raise RateLimitException("Encountered API rate limit.", response)
+    else:
+        raise APIException("Encountered unexpected error.", response)
+
+
+def get_sports(key: str) -> list[str]:
+    url = f"{PROTOCOL}{BASE_URL}/sports"
+    res = requests.get(url, params={'apiKey': key})
+    if res.status_code != 200:
+        handle_faulty_response(res)
+    sports = res.json()
+    return [sport['key'] for sport in sports if not sport['has_outrights']]
+
+
+def get_data(key: str, sport: str, region: str = 'eu') -> Generator[dict, None, None]:
+    url = f"{PROTOCOL}{BASE_URL}/sports/{sport}/odds"
+    res = requests.get(url, params={
+        'apiKey': key,
+        'regions': region,
+        'markets': 'h2h',
+        'dateFormat': 'unix'
+    })
+    if res.status_code != 200:
+        handle_faulty_response(res)
+    yield from res.json()
+
+
+def process_data(matches: Iterable, include_started_matches: bool = False, sportsbooks: Optional[Iterable[str]] = None):
+    allowed_sportsbooks = {s.strip().lower() for s in sportsbooks} if sportsbooks else None
+    for match in matches:
+        start_time = match.get('commence_time')
+        now = time.time()
+        if not include_started_matches and start_time and start_time < now:
+            continue
+
+        bookmakers = match.get('bookmakers', [])
+        if allowed_sportsbooks:
+            bookmakers = [
+                b for b in bookmakers
+                if b.get('key', '').lower() in allowed_sportsbooks or b.get('title', '').lower() in allowed_sportsbooks
+            ]
+
+        markets = [(book, market) for book in bookmakers for market in book.get('markets', []) if market.get('key') == 'h2h']
+        if not markets:
+            continue
+
+        best_odd_per_outcome = {}
+        for bookmaker, market in markets:
+            for outcome in market.get('outcomes', []):
+                name = outcome.get('name')
+                odds = outcome.get('price')
+                if name not in best_odd_per_outcome or odds > best_odd_per_outcome[name][1]:
+                    best_odd_per_outcome[name] = (bookmaker['title'], odds)
+
+        if not best_odd_per_outcome:
+            continue
+
+        implied_odds = {name: 1 / odds for name, (_, odds) in best_odd_per_outcome.items()}
+        total_implied_odds = sum(implied_odds.values())
+
+        hours_to_start = (start_time - now) / 3600 if start_time else None
+
+        yield {
+            'match_name': f"{match.get('home_team')} v. {match.get('away_team')}",
+            'match_start_time': start_time,
+            'hours_to_start': hours_to_start,
+            'league': match.get('sport_key'),
+            'best_outcome_odds': best_odd_per_outcome,
+            'total_implied_odds': total_implied_odds
+        }
+
+
+def get_arbitrage_opportunities(key: str, region: str = 'eu', cutoff: float = 0.0, sportsbooks: Optional[Iterable[str]] = None):
+    sports = get_sports(key)
+    data = chain.from_iterable(get_data(key, sport, region=region) for sport in sports)
+    data = filter(lambda x: x != "message", data)
+    results = process_data(data, sportsbooks=sportsbooks)
+    for result in results:
+        if result['total_implied_odds'] < (1 - cutoff):
+            yield result
+
 from itertools import chain
 
 try:
