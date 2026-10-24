@@ -61,7 +61,7 @@ def get_data(key: str, sport: str, region: str = 'eu') -> Generator[dict, None, 
 
 
 def process_data(matches: Iterable, include_started_matches: bool = False, sportsbooks: Optional[Iterable[str]] = None):
-    allowed_sportsbooks = {s.strip().lower() for s in sportsbooks} if sportsbooks else None
+    allowed_sportsbooks    allowed_sportsbooks = {item.strip().lower() for s in sportsbooks for item in s.split(',') if item.strip()} if sportsbooks else None = {s.strip().lower() for s in sportsbooks} if sportsbooks else None
     for match in matches:
         start_time = match.get('commence_time')
         now = time.time()
