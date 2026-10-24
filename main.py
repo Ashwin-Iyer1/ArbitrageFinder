@@ -34,7 +34,7 @@ def main():
                 filtered_data = []
                 for item in data:
                     odds = item.get('best_outcome_odds', {})
-                    books = {v.get('bookmaker', '').lower() for v in odds.values() if isinstance(v, dict) and 'bookmaker' in v}
+                                        books = {v[0].strip().lower() if isinstance(v, (list, tuple)) and v else v.get('bookmaker', '').strip().lower() for v in odds.values() if (isinstance(v, (list, tuple)) and v) or (isinstance(v, dict) and 'bookmaker' in v)}
                     if books and books.issubset(allowed):
                         filtered_data.append(item)
                 data = filtered_data
